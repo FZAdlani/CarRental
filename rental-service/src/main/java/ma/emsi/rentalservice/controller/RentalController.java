@@ -1,11 +1,9 @@
 package ma.emsi.rentalservice.controller;
 
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import ma.emsi.rentalservice.dto.RentalRequest;
-import ma.emsi.rentalservice.dto.RentalResponse;
+import ma.emsi.rentalservice.dto.RentalRequestDTO;
 import ma.emsi.rentalservice.model.Rental;
 import ma.emsi.rentalservice.service.RentalService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,49 +12,63 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/rentals")
-@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class RentalController {
 
-    private final RentalService rentalService;
+    @Autowired
+    private RentalService rentalService;
 
     @PostMapping
-    public ResponseEntity<RentalResponse> createRental(@Valid @RequestBody RentalRequest request) {
-        RentalResponse response = rentalService.createRental(request);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<RentalResponse> getRentalById(@PathVariable Long id) {
-        RentalResponse response = rentalService.getRentalById(id);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> createRental(@RequestBody RentalRequestDTO request) {
+        try {
+            Rental rental = rentalService.createRental(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(rental);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Erreur: " + e.getMessage());
+        }
     }
 
     @GetMapping
-    public ResponseEntity<List<RentalResponse>> getAllRentals(
-            @RequestParam(required = false) String customerEmail) {
+    public ResponseEntity<List<Rental>> getAllRentals() {
+        return ResponseEntity.ok(rentalService.getAllRentals());
+    }
 
-        if (customerEmail != null && !customerEmail.isEmpty()) {
-            List<RentalResponse> rentals = rentalService.getRentalsByCustomerEmail(customerEmail);
-            return ResponseEntity.ok(rentals);
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getRentalById(@PathVariable Long id) {
+        try {
+            Rental rental = rentalService.getRentalById(id);
+            return ResponseEntity.ok(rental);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Erreur: " + e.getMessage());
         }
-
-        List<RentalResponse> rentals = rentalService.getAllRentals();
-        return ResponseEntity.ok(rentals);
     }
 
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<RentalResponse> updateRentalStatus(
-            @PathVariable Long id,
-            @RequestParam Rental.RentalStatus status) {
-
-        RentalResponse response = rentalService.updateRentalStatus(id, status);
-        return ResponseEntity.ok(response);
+    @GetMapping("/client/{email}")
+    public ResponseEntity<List<Rental>> getRentalsByClient(@PathVariable String email) {
+        return ResponseEntity.ok(rentalService.getRentalsByClientEmail(email));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRental(@PathVariable Long id) {
-        rentalService.deleteRental(id);
-        return ResponseEntity.noContent().build();
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelRental(@PathVariable Long id) {
+        try {
+            Rental rental = rentalService.cancelRental(id);
+            return ResponseEntity.ok(rental);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Erreur: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/{id}/confirm")
+    public ResponseEntity<?> confirmRental(@PathVariable Long id, @RequestParam String paymentId) {
+        try {
+            Rental rental = rentalService.confirmRental(id, paymentId);
+            return ResponseEntity.ok(rental);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Erreur: " + e.getMessage());
+        }
     }
 }
-

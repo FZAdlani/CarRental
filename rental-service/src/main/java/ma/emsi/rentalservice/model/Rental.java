@@ -1,9 +1,9 @@
 package ma.emsi.rentalservice.model;
 
 import jakarta.persistence.*;
-import lombok.*;
-
-import java.math.BigDecimal;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 @Entity
@@ -11,8 +11,9 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+
 public class Rental {
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,13 +23,13 @@ public class Rental {
     private Long carId;
 
     @Column(nullable = false)
-    private String customerName;
+    private String clientName;
 
     @Column(nullable = false)
-    private String customerEmail;
+    private String clientEmail;
 
     @Column(nullable = false)
-    private String customerPhone;
+    private String clientPhone;
 
     @Column(nullable = false)
     private LocalDate startDate;
@@ -37,22 +38,13 @@ public class Rental {
     private LocalDate endDate;
 
     @Column(nullable = false)
-    private BigDecimal totalPrice;
+    private Double totalPrice;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private RentalStatus status;
+    private RentalStatus status = RentalStatus.PENDING;
 
-    @Column(updatable = false)
-    private LocalDate createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDate.now();
-        if (status == null) {
-            status = RentalStatus.PENDING;
-        }
-    }
+    private String paymentId;
 
     public enum RentalStatus {
         PENDING,
@@ -62,4 +54,3 @@ public class Rental {
         CANCELLED
     }
 }
-

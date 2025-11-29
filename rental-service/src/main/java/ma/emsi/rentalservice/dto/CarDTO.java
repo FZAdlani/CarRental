@@ -4,19 +4,18 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CarDto {
+public class CarDTO {
     private Long id;
     private String brand;
     private String model;
     private Integer year;
-    private String licensePlate;
+    private String registrationNumber;
     private String color;
-    private BigDecimal dailyPrice;
+    private Double pricePerDay;
     private Boolean available;
+    private String category;
+    private String imageUrl;
 }
-

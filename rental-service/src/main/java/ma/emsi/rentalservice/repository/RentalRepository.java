@@ -9,10 +9,9 @@ import java.util.List;
 @Repository
 public interface RentalRepository extends JpaRepository<Rental, Long> {
 
-    List<Rental> findByCarId(Long carId);
+    List<Rental> findByClientEmail(String clientEmail);
 
-    List<Rental> findByCustomerEmail(String customerEmail);
+    List<Rental> findByCarId(Long carId);
 
     List<Rental> findByStatus(Rental.RentalStatus status);
 }
-
