@@ -1,29 +1,32 @@
-package ma.emsi.rentalservice.controller;
+package ma.emsi.paymentservice.controller;
 
-import ma.emsi.rentalservice.dto.PaymentRequestDTO;
-import ma.emsi.rentalservice.dto.PaymentResponseDTO;
-import ma.emsi.rentalservice.service.PaymentService;
+import ma.emsi.paymentservice.dto.PaymentRequestDTO;
+import ma.emsi.paymentservice.dto.PaymentResponseDTO;
+import ma.emsi.paymentservice.entity.Payment;
+import ma.emsi.paymentservice.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/payments")
 @CrossOrigin(origins = "*")
 public class PaymentController {
-
+    
     @Autowired
     private PaymentService paymentService;
 
     /**
-     * Endpoint principal : Paiement avec Stripe SDK
+     * Paiement avec Stripe SDK
      */
     @PostMapping("/stripe")
     public ResponseEntity<?> processPaymentWithStripe(@RequestBody PaymentRequestDTO request) {
         try {
-            PaymentResponseDTO response = paymentService.processPaymentWithSDK(request);
+            PaymentResponseDTO response = paymentService.processPaymentWithStripe(request);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -32,7 +35,7 @@ public class PaymentController {
     }
 
     /**
-     * Endpoint alternatif : Paiement avec WebClient
+     * Paiement avec WebClient
      */
     @PostMapping("/webclient")
     public Mono<ResponseEntity<PaymentResponseDTO>> processPaymentWithWebClient(
@@ -46,7 +49,7 @@ public class PaymentController {
     }
 
     /**
-     * Endpoint de simulation (pour tests sans Stripe réel)
+     * Simulation de paiement
      */
     @PostMapping("/simulate")
     public ResponseEntity<?> simulatePayment(@RequestBody PaymentRequestDTO request) {
@@ -57,5 +60,27 @@ public class PaymentController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Erreur: " + e.getMessage());
         }
+    }
+
+    /**
+     * Récupérer un paiement par rental ID
+     */
+    @GetMapping("/rental/{rentalId}")
+    public ResponseEntity<?> getPaymentByRentalId(@PathVariable Long rentalId) {
+        try {
+            Payment payment = paymentService.getPaymentByRentalId(rentalId);
+            return ResponseEntity.ok(payment);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Erreur: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Lister tous les paiements
+     */
+    @GetMapping
+    public ResponseEntity<List<Payment>> getAllPayments() {
+        return ResponseEntity.ok(paymentService.getAllPayments());
     }
 }

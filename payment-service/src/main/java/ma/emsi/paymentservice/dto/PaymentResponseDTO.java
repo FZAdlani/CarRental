@@ -1,4 +1,4 @@
-package ma.emsi.rentalservice.dto;
+package ma.emsi.paymentservice.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,7 +8,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentResponseDTO {
-    private String paymentId;
+    private Long paymentId;
+    private String stripePaymentId;
     private String status;
     private Double amount;
     private String currency;
