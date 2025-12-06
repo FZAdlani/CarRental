@@ -1,6 +1,5 @@
 package ma.emsi.analyticsservice.service;
 
-
 import ma.emsi.analyticsservice.client.CarFeignClient;
 import ma.emsi.analyticsservice.client.RentalFeignClient;
 import ma.emsi.analyticsservice.dto.*;
@@ -25,41 +24,49 @@ public class AnalyticsService {
      * Calculer le taux d'occupation de toutes les voitures
      */
     public List<CarOccupancyDTO> calculateOccupancyRates() {
-        List<CarDTO> cars = carFeignClient.getAllCars();
-        List<RentalDTO> rentals = rentalFeignClient.getAllRentals();
+        try {
+            List<CarDTO> cars = carFeignClient.getAllCarsHal().getCars();
+            List<RentalDTO> rentals = rentalFeignClient.getAllRentals();
 
-        return cars.stream().map(car -> {
-            List<RentalDTO> carRentals = rentals.stream()
-                    .filter(r -> r.getCarId().equals(car.getId()))
-                    .filter(r -> !"CANCELLED".equals(r.getStatus()))
-                    .collect(Collectors.toList());
+            if (cars == null || cars.isEmpty()) {
+                return List.of();
+            }
 
-            int totalRentals = carRentals.size();
-            int totalDaysRented = carRentals.stream()
-                    .mapToInt(r -> (int) ChronoUnit.DAYS.between(r.getStartDate(), r.getEndDate()))
-                    .sum();
+            return cars.stream().map(car -> {
+                List<RentalDTO> carRentals = rentals.stream()
+                        .filter(r -> r.getCarId().equals(car.getId()))
+                        .filter(r -> !"CANCELLED".equals(r.getStatus()))
+                        .collect(Collectors.toList());
 
-            double totalRevenue = carRentals.stream()
-                    .mapToDouble(RentalDTO::getTotalPrice)
-                    .sum();
+                int totalRentals = carRentals.size();
+                int totalDaysRented = carRentals.stream()
+                        .mapToInt(r -> (int) ChronoUnit.DAYS.between(r.getStartDate(), r.getEndDate()))
+                        .sum();
 
-            // Calculer le taux d'occupation (sur 365 jours)
-            double occupancyRate = (totalDaysRented / 365.0) * 100;
+                double totalRevenue = carRentals.stream()
+                        .mapToDouble(RentalDTO::getTotalPrice)
+                        .sum();
 
-            String status = car.getAvailable() ? "Disponible" : "Louée";
+                // Calculer le taux d'occupation (sur 365 jours)
+                double occupancyRate = (totalDaysRented / 365.0) * 100;
 
-            return new CarOccupancyDTO(
-                    car.getId(),
-                    car.getBrand(),
-                    car.getModel(),
-                    car.getRegistrationNumber(),
-                    totalRentals,
-                    totalDaysRented,
-                    Math.round(occupancyRate * 100.0) / 100.0,
-                    totalRevenue,
-                    status
-            );
-        }).collect(Collectors.toList());
+                String status = car.getAvailable() ? "Disponible" : "Louée";
+
+                return new CarOccupancyDTO(
+                        car.getId(),
+                        car.getBrand(),
+                        car.getModel(),
+                        car.getRegistrationNumber(),
+                        totalRentals,
+                        totalDaysRented,
+                        Math.round(occupancyRate * 100.0) / 100.0,
+                        totalRevenue,
+                        status
+                );
+            }).collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors du calcul des taux d'occupation: " + e.getMessage());
+        }
     }
 
     /**
@@ -103,7 +110,7 @@ public class AnalyticsService {
      * Statistiques globales
      */
     public GlobalStatisticsDTO getGlobalStatistics() {
-        List<CarDTO> cars = carFeignClient.getAllCars();
+        List<CarDTO> cars = carFeignClient.getAllCarsHal().getCars();
         List<RentalDTO> rentals = rentalFeignClient.getAllRentals();
 
         int totalCars = cars.size();
@@ -154,7 +161,7 @@ public class AnalyticsService {
                 .filter(r -> !"CANCELLED".equals(r.getStatus()))
                 .collect(Collectors.toList());
 
-        List<CarDTO> cars = carFeignClient.getAllCars();
+        List<CarDTO> cars = carFeignClient.getAllCarsHal().getCars();
 
         List<CarOccupancyDTO> occupancies = cars.stream().map(car -> {
             List<RentalDTO> carRentals = periodRentals.stream()
@@ -196,7 +203,7 @@ public class AnalyticsService {
      * Revenus par catégorie
      */
     public List<CategoryRevenueDTO> getRevenueByCategory() {
-        List<CarDTO> cars = carFeignClient.getAllCars();
+        List<CarDTO> cars = carFeignClient.getAllCarsHal().getCars();
         List<RentalDTO> rentals = rentalFeignClient.getAllRentals();
 
         Map<String, List<RentalDTO>> rentalsByCategory = new HashMap<>();

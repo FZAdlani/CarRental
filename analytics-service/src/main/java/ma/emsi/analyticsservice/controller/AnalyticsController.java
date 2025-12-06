@@ -19,27 +19,47 @@ public class AnalyticsController {
     private AnalyticsService analyticsService;
 
     /**
+     * Endpoint de test
+     */
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        return ResponseEntity.ok("Analytics Service is running!");
+    }
+
+    /**
      * Taux d'occupation de toutes les voitures
      */
     @GetMapping("/occupancy")
-    public ResponseEntity<List<CarOccupancyDTO>> getAllOccupancyRates() {
-        return ResponseEntity.ok(analyticsService.calculateOccupancyRates());
+    public ResponseEntity<?> getAllOccupancyRates() {
+        try {
+            return ResponseEntity.ok(analyticsService.calculateOccupancyRates());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erreur: " + e.getMessage());
+        }
     }
 
     /**
      * Taux d'occupation d'une voiture spécifique
      */
     @GetMapping("/occupancy/car/{carId}")
-    public ResponseEntity<CarOccupancyDTO> getCarOccupancy(@PathVariable Long carId) {
-        return ResponseEntity.ok(analyticsService.calculateCarOccupancy(carId));
+    public ResponseEntity<?> getCarOccupancy(@PathVariable Long carId) {
+        try {
+            return ResponseEntity.ok(analyticsService.calculateCarOccupancy(carId));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erreur: " + e.getMessage());
+        }
     }
 
     /**
      * Statistiques globales
      */
     @GetMapping("/statistics")
-    public ResponseEntity<GlobalStatisticsDTO> getGlobalStatistics() {
-        return ResponseEntity.ok(analyticsService.getGlobalStatistics());
+    public ResponseEntity<?> getGlobalStatistics() {
+        try {
+            return ResponseEntity.ok(analyticsService.getGlobalStatistics());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erreur: " + e.getMessage());
+        }
     }
 
     /**
